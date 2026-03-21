@@ -124,65 +124,23 @@ input::placeholder,textarea::placeholder{color:var(--txt3)}
   vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{color:var(--txt3);font-size:.84rem;text-align:center;padding:18px;font-family:'JetBrains Mono',monospace}
-
-/* ── Department Block ── */
-.dept-block{
-  margin-bottom:28px;
-  border:1px solid var(--bdr);
-  border-radius:14px;
-  overflow:hidden;
-  background:rgba(0,0,0,.18);
-}
-.dept-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 18px;
-  background:rgba(232,80,10,.06);
-  border-bottom:1px solid var(--bdr);
-  cursor:pointer;
-  user-select:none;
-  gap:10px;
-}
+.dept-block{margin-bottom:28px;border:1px solid var(--bdr);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.18)}
+.dept-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(232,80,10,.06);border-bottom:1px solid var(--bdr);cursor:pointer;user-select:none;gap:10px}
 .dept-header:hover{background:rgba(232,80,10,.1)}
-.dept-title{
-  font-size:.95rem;font-weight:800;letter-spacing:-.2px;
-  display:flex;align-items:center;gap:9px;
-}
+.dept-title{font-size:.95rem;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:9px}
 .dept-icon{font-size:1.1rem}
-.dept-count{
-  font-family:'JetBrains Mono',monospace;font-size:.7rem;
-  background:rgba(232,80,10,.14);color:var(--sl);
-  border-radius:20px;padding:2px 10px;border:1px solid var(--bdr);
-  white-space:nowrap;
-}
-.dept-chevron{
-  font-size:.75rem;color:var(--txt3);
-  transition:transform .25s;flex-shrink:0;
-}
+.dept-count{font-family:'JetBrains Mono',monospace;font-size:.7rem;background:rgba(232,80,10,.14);color:var(--sl);border-radius:20px;padding:2px 10px;border:1px solid var(--bdr);white-space:nowrap}
+.dept-chevron{font-size:.75rem;color:var(--txt3);transition:transform .25s;flex-shrink:0}
 .dept-chevron.open{transform:rotate(180deg)}
 .dept-body{padding:14px 16px 16px}
-
-/* ── Priority Row inside dept ── */
 .prio-block{margin-bottom:16px}
 .prio-block:last-child{margin-bottom:0}
-.prio-label{
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:8px;
-  padding:5px 10px;
-  border-radius:7px;
-  font-size:.72rem;font-weight:700;letter-spacing:2px;
-  font-family:'JetBrains Mono',monospace;
-  text-transform:uppercase;
-}
+.prio-label{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:5px 10px;border-radius:7px;font-size:.72rem;font-weight:700;letter-spacing:2px;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
 .prio-CRITICAL{background:rgba(240,64,64,.08);color:var(--red);border-left:3px solid var(--red)}
-.prio-HIGH    {background:rgba(240,160,48,.08);color:var(--amber);border-left:3px solid var(--amber)}
-.prio-MEDIUM  {background:rgba(58,191,207,.08);color:var(--blue);border-left:3px solid var(--blue)}
-.prio-LOW     {background:rgba(15,200,138,.08);color:var(--green);border-left:3px solid var(--green)}
-.prio-count{
-  margin-left:auto;
-  font-size:.65rem;
-  opacity:.7;
-}
-
+.prio-HIGH{background:rgba(240,160,48,.08);color:var(--amber);border-left:3px solid var(--amber)}
+.prio-MEDIUM{background:rgba(58,191,207,.08);color:var(--blue);border-left:3px solid var(--blue)}
+.prio-LOW{background:rgba(15,200,138,.08);color:var(--green);border-left:3px solid var(--green)}
+.prio-count{margin-left:auto;font-size:.65rem;opacity:.7}
 @media(max-width:860px){.sb{display:none}.main{margin-left:0;padding:18px 14px}}
 </style>
 </head>
@@ -429,14 +387,12 @@ function getDeptIcon(name) {
 
 function renderGrouped(data, showOfficer = false) {
   const PRIO_ORDER = ['CRITICAL','HIGH','MEDIUM','LOW'];
-
   const deptMap = {};
   for(const d of data){
     const dept = d.departmentName || 'Unknown Department';
     if(!deptMap[dept]) deptMap[dept] = [];
     deptMap[dept].push(d);
   }
-
   const deptPrioRank = dept => {
     const items = deptMap[dept];
     for(const p of PRIO_ORDER){
@@ -445,12 +401,10 @@ function renderGrouped(data, showOfficer = false) {
     return 99;
   };
   const sortedDepts = Object.keys(deptMap).sort((a,b) => deptPrioRank(a)-deptPrioRank(b));
-
   let html = '';
   for(const dept of sortedDepts){
     const items = deptMap[dept];
     const icon  = getDeptIcon(dept);
-
     const prioMap = {};
     for(const p of PRIO_ORDER) prioMap[p] = [];
     for(const d of items){
@@ -458,7 +412,6 @@ function renderGrouped(data, showOfficer = false) {
       if(prioMap[p]) prioMap[p].push(d);
       else prioMap['LOW'].push(d);
     }
-
     const prioSections = PRIO_ORDER.filter(p => prioMap[p].length > 0).map(p => {
       const list = prioMap[p];
       const cards = list.map(d => {
@@ -481,7 +434,6 @@ function renderGrouped(data, showOfficer = false) {
             <div class="cdetail" style="display:none">${renderComplaint(d)}</div>
           </div>`;
       }).join('');
-
       return `
         <div class="prio-block">
           <div class="prio-label prio-${p}">
@@ -492,7 +444,6 @@ function renderGrouped(data, showOfficer = false) {
           <div class="clist">${cards}</div>
         </div>`;
     }).join('');
-
     html += `
       <div class="dept-block">
         <div class="dept-header" onclick="toggleDept(this)">
@@ -520,12 +471,48 @@ function toggleDept(header) {
 }
 
 function summaryBanner(id, data) {
+  const total    = data.length;
+  const resolved = data.filter(d => (d.status||'').toUpperCase() === 'RESOLVED').length;
+  const pending  = data.filter(d => (d.status||'').toUpperCase() === 'PENDING').length;
+  const inprog   = data.filter(d => (d.status||'').toUpperCase() === 'IN_PROGRESS').length;
+  const critical = data.filter(d => (d.urgency||'').toUpperCase() === 'CRITICAL').length;
+  const pct      = total ? Math.round((resolved / total) * 100) : 0;
+  const barColor = pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
   return `
-    <div style="margin-bottom:16px;padding:10px 14px;background:rgba(232,80,10,.06);
-      border:1px solid var(--bdr);border-radius:9px;font-size:.8rem;color:var(--txt2);
-      display:flex;align-items:center;gap:8px;">
-      🪪 <span style="font-family:'JetBrains Mono';color:var(--sl)">${id}</span>
-      <span style="margin-left:auto;color:var(--txt3)">Total: <strong style="color:var(--txt)">${data.length}</strong></span>
+    <div style="margin-bottom:18px;">
+      <div style="padding:10px 14px;background:rgba(232,80,10,.06);border:1px solid var(--bdr);
+        border-radius:9px 9px 0 0;font-size:.8rem;color:var(--txt2);
+        display:flex;align-items:center;gap:8px;">
+        🪪 <span style="font-family:'JetBrains Mono';color:var(--sl)">${id}</span>
+        <span style="margin-left:auto;color:var(--txt3)">Total: <strong style="color:var(--txt)">${total}</strong></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--bdr);border-top:none;border-radius:0 0 9px 9px;overflow:hidden;">
+        <div style="padding:12px 14px;background:rgba(15,200,138,.06);border-right:1px solid var(--bdr2);text-align:center;">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'JetBrains Mono'">${resolved}</div>
+          <div style="font-size:.63rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">✅ Resolved</div>
+        </div>
+        <div style="padding:12px 14px;background:rgba(255,255,255,.02);border-right:1px solid var(--bdr2);text-align:center;">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--txt3);font-family:'JetBrains Mono'">${pending}</div>
+          <div style="font-size:.63rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">⏳ Pending</div>
+        </div>
+        <div style="padding:12px 14px;background:rgba(240,160,48,.04);border-right:1px solid var(--bdr2);text-align:center;">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--amber);font-family:'JetBrains Mono'">${inprog}</div>
+          <div style="font-size:.63rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">🔄 In Progress</div>
+        </div>
+        <div style="padding:12px 14px;background:rgba(240,64,64,.04);text-align:center;">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--red);font-family:'JetBrains Mono'">${critical}</div>
+          <div style="font-size:.63rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">🔴 Critical</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--txt3);margin-bottom:4px;">
+          <span>Resolution Progress</span>
+          <span style="color:${barColor};font-weight:700">${pct}%</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;border-radius:99px;background:${barColor};transition:width .6s ease;"></div>
+        </div>
+      </div>
     </div>`;
 }
 
