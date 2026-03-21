@@ -14,7 +14,7 @@
   --txt:#EDEAE5;--txt2:#B0ACBA;--txt3:#6E6A7A;
   --green:#0FC88A;--red:#F04040;--amber:#F0A030;--blue:#3ABFCF;
 }
-html,body{height:100%}
+html,body{height:100%;overflow-x:hidden}
 body{background:var(--deep);color:var(--txt);font-family:'Outfit',sans-serif;display:flex;min-height:100vh}
 .sb{width:258px;min-height:100vh;background:var(--ink);border-right:1px solid var(--bdr);display:flex;flex-direction:column;padding:26px 16px;position:fixed;top:0;left:0;z-index:10;overflow-y:auto}
 .sb-logo{font-size:1.15rem;font-weight:800;margin-bottom:26px;display:flex;align-items:center;gap:7px}
@@ -35,7 +35,7 @@ body{background:var(--deep);color:var(--txt);font-family:'Outfit',sans-serif;dis
 .sb-out:hover{background:rgba(240,64,64,.16)}
 .admin-only{display:none}
 .admin-only.show{display:block}
-.main{margin-left:258px;flex:1;padding:36px;position:relative;z-index:1;min-height:100vh}
+.main{margin-left:258px;flex:1;padding:36px;min-height:100vh;overflow-x:hidden}
 .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
 .top h1{font-size:1.45rem;font-weight:800;letter-spacing:-.5px}
 .top h1 em{color:var(--sl);font-style:normal}
@@ -44,8 +44,8 @@ body{background:var(--deep);color:var(--txt);font-family:'Outfit',sans-serif;dis
 .a-alert{background:rgba(58,191,207,.06);border:1px solid rgba(58,191,207,.2);border-radius:10px;padding:13px 17px;font-size:.855rem;color:var(--blue);margin-bottom:22px;display:none;align-items:center;gap:9px}
 .a-alert.show{display:flex}
 .tab{display:none}
-.tab.on{display:block;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.tab.on{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .card{background:var(--ink);border:1px solid var(--bdr);border-radius:16px;overflow:hidden;max-width:740px;margin-bottom:18px}
 .ch{padding:20px 24px;border-bottom:1px solid var(--bdr2)}
 .ce{font-size:.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--s);font-weight:600;margin-bottom:6px;font-family:'JetBrains Mono',monospace}
@@ -65,7 +65,7 @@ input::placeholder,textarea::placeholder{color:var(--txt3)}
 .btn-sec{background:transparent;border:1px solid var(--bdr2);color:var(--txt2)}
 .btn-sec:hover{background:rgba(232,80,10,.07);border-color:var(--bdr);color:var(--txt)}
 .res{margin-top:13px;background:rgba(0,0,0,.4);border:1px solid var(--bdr2);border-radius:11px;padding:16px;display:none}
-.res.on{display:block;animation:fadeIn .3s ease}
+.res.on{display:block;animation:fadeIn .25s ease}
 .dr{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.84rem;gap:8px}
 .dr:last-child{border-bottom:none}
 .dk{color:var(--txt3);flex-shrink:0;min-width:120px}
@@ -304,7 +304,6 @@ const H = () => ({
   'Authorization': 'Bearer ' + token
 });
 
-// Solved statuses — ANALYZED bhi solved hai
 const SOLVED = ['RESOLVED','ANALYZED'];
 const isSolved = s => SOLVED.includes((s||'').toUpperCase());
 
