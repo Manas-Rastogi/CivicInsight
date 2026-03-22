@@ -560,7 +560,6 @@ function summaryBanner(id,data) {
     { label:'Total',    val:total,    color:'var(--txt)',   bg:'rgba(255,255,255,.03)', border:'var(--bdr2)',             icon:'📋' },
     { label:'Pending',  val:pending,  color:'var(--amber)', bg:'rgba(240,160,48,.05)', border:'rgba(240,160,48,.18)',    icon:'⏳' },
     { label:'Analyzed', val:analyzed, color:'var(--blue)',  bg:'rgba(58,191,207,.05)', border:'rgba(58,191,207,.18)',    icon:'🔍' },
-    { label:'Resolved', val:resolved, color:'var(--green)', bg:'rgba(15,200,138,.05)', border:'rgba(15,200,138,.18)',    icon:'✅' },
   ].filter(s => s.val > 0);
 
   const cards = stats.map(s => `
@@ -731,7 +730,7 @@ function renderStatsPanel(data) {
   const resolved = data.filter(d => (d.status||'').toUpperCase()==='RESOLVED').length;
 
   let html = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:16px;">
       <div style="background:rgba(255,255,255,.03);border:1px solid var(--bdr2);border-radius:8px;padding:10px;text-align:center;">
         <div style="font-size:1.3rem;font-weight:800;color:var(--txt);font-family:'JetBrains Mono'">${total}</div>
         <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">📋 Total</div>
@@ -743,10 +742,6 @@ function renderStatsPanel(data) {
       <div style="background:rgba(58,191,207,.06);border:1px solid rgba(58,191,207,.2);border-radius:8px;padding:10px;text-align:center;">
         <div style="font-size:1.3rem;font-weight:800;color:var(--blue);font-family:'JetBrains Mono'">${analyzed}</div>
         <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">🔍 Analyzed</div>
-      </div>
-      <div style="background:rgba(15,200,138,.06);border:1px solid rgba(15,200,138,.2);border-radius:8px;padding:10px;text-align:center;">
-        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'JetBrains Mono'">${resolved}</div>
-        <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">✅ Resolved</div>
       </div>
     </div>
     <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--txt3);font-family:'JetBrains Mono';margin-bottom:10px">// Department Breakdown</div>
@@ -768,7 +763,6 @@ function renderStatsPanel(data) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <span style="font-size:.68rem;background:rgba(240,160,48,.1);color:var(--amber);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">⏳ ${s.pending} Pending</span>
           <span style="font-size:.68rem;background:rgba(58,191,207,.1);color:var(--blue);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">🔍 ${s.analyzed} Analyzed</span>
-          <span style="font-size:.68rem;background:rgba(15,200,138,.1);color:var(--green);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">✅ ${s.resolved} Resolved</span>
         </div>
       </div>`;
   }
