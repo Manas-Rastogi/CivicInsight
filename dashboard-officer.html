@@ -238,17 +238,37 @@ input::placeholder,textarea::placeholder{color:var(--txt3)}
   </div>
 
   <div class="tab" id="tab-reports">
-    <div class="card">
-      <div class="ch"><div class="ce">// Admin — All Reports</div><div class="ct">Sabhi Complaints Fetch Karein</div></div>
-      <div class="cb">
-        <div class="field"><label>Admin ID</label>
-          <div class="srow">
-            <input type="text" id="rAdId" placeholder="Admin ID..."/>
-            <button class="btn" onclick="adminReports()">Fetch All</button>
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+
+      <!-- Left: Complaints list -->
+      <div style="flex:1;min-width:280px;">
+        <div class="card">
+          <div class="ch"><div class="ce">// Admin — All Reports</div><div class="ct">Sabhi Complaints Fetch Karein</div></div>
+          <div class="cb">
+            <div class="field"><label>Admin ID</label>
+              <div class="srow">
+                <input type="text" id="rAdId" placeholder="Admin ID..."/>
+                <button class="btn" onclick="adminReports()">Fetch All</button>
+              </div>
+            </div>
+            <div id="rRes"></div>
           </div>
         </div>
-        <div id="rRes"></div>
       </div>
+
+      <!-- Right: Stats panel -->
+      <div style="width:300px;flex-shrink:0;" id="statsPanel" style="display:none">
+        <div class="card" style="max-width:100%;position:sticky;top:24px;">
+          <div class="ch">
+            <div class="ce">// Department Stats</div>
+            <div class="ct">Complaint Breakdown</div>
+          </div>
+          <div class="cb" id="statsPanelBody">
+            <p class="empty">Pehle reports fetch karein</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -661,9 +681,80 @@ async function adminReports() {
     const r=await fetch(`${API}/admin/fetch/reports?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
     if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
     const data=await r.json();
-    if(!Array.isArray(data)||!data.length){el.innerHTML='<p class="empty">// No reports found</p>';return;}
+    if(!Array.isArray(data)||!data.length){
+      el.innerHTML='<p class="empty">// No reports found</p>';
+      document.getElementById('statsPanelBody').innerHTML='<p class="empty">Koi data nahi</p>';
+      return;
+    }
     el.innerHTML=summaryBanner(id,data)+renderGrouped(data,true);
+    renderStatsPanel(data);
   } catch(e){el.innerHTML=`<p style="color:var(--red)">❌ ${e.message}</p>`;}
+}
+
+function renderStatsPanel(data) {
+  const panel = document.getElementById('statsPanelBody');
+  document.getElementById('statsPanel').removeAttribute('style');
+
+  const deptMap = {};
+  for (const d of data) {
+    const dept = d.departmentName || 'Unknown';
+    if (!deptMap[dept]) deptMap[dept] = { total:0, pending:0, analyzed:0, resolved:0 };
+    deptMap[dept].total++;
+    const st = (d.status||'').toUpperCase();
+    if (st === 'ANALYZED') deptMap[dept].analyzed++;
+    else if (st === 'RESOLVED') deptMap[dept].resolved++;
+    else deptMap[dept].pending++;
+  }
+
+  const sorted   = Object.entries(deptMap).sort((a,b) => b[1].total - a[1].total);
+  const total    = data.length;
+  const pending  = data.filter(d => !isSolved(d.status)).length;
+  const analyzed = data.filter(d => (d.status||'').toUpperCase()==='ANALYZED').length;
+  const resolved = data.filter(d => (d.status||'').toUpperCase()==='RESOLVED').length;
+
+  let html = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px;">
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--bdr2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--txt);font-family:'JetBrains Mono'">${total}</div>
+        <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">📋 Total</div>
+      </div>
+      <div style="background:rgba(240,160,48,.06);border:1px solid rgba(240,160,48,.2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--amber);font-family:'JetBrains Mono'">${pending}</div>
+        <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">⏳ Pending</div>
+      </div>
+      <div style="background:rgba(58,191,207,.06);border:1px solid rgba(58,191,207,.2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--blue);font-family:'JetBrains Mono'">${analyzed}</div>
+        <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">🔍 Analyzed</div>
+      </div>
+      <div style="background:rgba(15,200,138,.06);border:1px solid rgba(15,200,138,.2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'JetBrains Mono'">${resolved}</div>
+        <div style="font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:2px">✅ Resolved</div>
+      </div>
+    </div>
+    <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--txt3);font-family:'JetBrains Mono';margin-bottom:10px">// Department Breakdown</div>
+  `;
+
+  for (const [dept, s] of sorted) {
+    const icon     = getDeptIcon(dept);
+    const pct      = s.total > 0 ? Math.round((s.pending / s.total) * 100) : 0;
+    const barColor = pct > 66 ? 'var(--red)' : pct > 33 ? 'var(--amber)' : 'var(--green)';
+    html += `
+      <div style="margin-bottom:12px;background:rgba(0,0,0,.2);border:1px solid var(--bdr2);border-radius:9px;padding:11px 13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:6px;">
+          <span style="font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:6px;">${icon} ${dept}</span>
+          <span style="font-family:'JetBrains Mono';font-size:.7rem;color:var(--sl);font-weight:700">${s.total} total</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin-bottom:8px;">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:.68rem;background:rgba(240,160,48,.1);color:var(--amber);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">⏳ ${s.pending} Pending</span>
+          <span style="font-size:.68rem;background:rgba(58,191,207,.1);color:var(--blue);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">🔍 ${s.analyzed} Analyzed</span>
+          <span style="font-size:.68rem;background:rgba(15,200,138,.1);color:var(--green);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono'">✅ ${s.resolved} Resolved</span>
+        </div>
+      </div>`;
+  }
+  panel.innerHTML = html;
 }
 
 async function adminOfficers() {
