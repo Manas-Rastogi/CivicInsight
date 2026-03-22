@@ -115,6 +115,14 @@ input::placeholder,textarea::placeholder{color:var(--txt3)}
 .prio-MEDIUM{background:rgba(58,191,207,.08);color:var(--blue);border-left:3px solid var(--blue)}
 .prio-LOW{background:rgba(15,200,138,.08);color:var(--green);border-left:3px solid var(--green)}
 .prio-count{margin-left:auto;font-size:.65rem;opacity:.7}
+/* Officer mini card inside complaint detail */
+.off-card{margin-top:10px;background:rgba(232,80,10,.05);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;display:flex;align-items:center;gap:12px}
+.off-card-info{flex:1}
+.off-card-name{font-size:.86rem;font-weight:700;color:var(--sl)}
+.off-card-dept{font-size:.7rem;color:var(--txt3);margin-top:2px}
+.off-card-rating{text-align:right;flex-shrink:0}
+.off-stars{font-size:.95rem;letter-spacing:2px}
+.off-val{font-size:.68rem;color:var(--txt3);font-family:'JetBrains Mono';margin-top:2px}
 @media(max-width:860px){.sb{display:none}.main{margin-left:0;padding:18px 14px}}
 </style>
 </head>
@@ -273,7 +281,6 @@ input::placeholder,textarea::placeholder{color:var(--txt3)}
       </div>
     </div>
   </div>
-
 </main>
 
 <script>
@@ -307,155 +314,226 @@ const H = () => ({
 const SOLVED = ['RESOLVED','ANALYZED'];
 const isSolved = s => SOLVED.includes((s||'').toUpperCase());
 
-function tab(name, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  document.querySelectorAll('.sb-nav a').forEach(a => a.classList.remove('on'));
-  const activeTab = document.getElementById('tab-' + name);
-  if (activeTab) activeTab.classList.add('on');
-  if (el) el.classList.add('on');
-  if (role === 'ADMIN') {
-    const savedId = localStorage.getItem('id');
-    if (savedId) {
-      if (name === 'reports')     document.getElementById('rAdId').value = savedId;
-      if (name === 'allofficers') document.getElementById('oAdId').value = savedId;
-      if (name === 'unsolved')    document.getElementById('uAdId').value = savedId;
-    }
-  }
-  if (name === 'mycomplaints') {
-    document.getElementById('myOfficerId').value = myId;
-  }
+// ── Officer cache: same ID baar baar fetch na ho ──────────────────────────────
+const officerCache = {};
+async function getOfficer(id) {
+  if (!id || id === '—') return null;
+  if (officerCache[id]) return officerCache[id];
+  try {
+    const r = await fetch(
+      `${API}/department_officer/Analysis/find/Officer?Id=${encodeURIComponent(id)}`,
+      { method:'POST', headers:H() }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    officerCache[id] = d;
+    return d;
+  } catch { return null; }
 }
 
-function renderComplaint(d) {
-  if(!d) return '<p class="empty">Data nahi mila</p>';
-  const urg  = (d.urgency || '').toUpperCase();
-  const urgC = urg === 'CRITICAL' ? 'uc' : urg === 'HIGH' ? 'uh' : 'un';
-  const st   = (d.status || 'PENDING').toUpperCase();
-  const dateObj = d.createdAt ? new Date(d.createdAt) : null;
-  const formattedDate = dateObj
-    ? dateObj.toLocaleDateString('hi-IN') + ' | ' + dateObj.toLocaleTimeString('hi-IN', {hour: '2-digit', minute:'2-digit'})
-    : '—';
-  const offName = d.OfficerName || d.officerName || 'Not Assigned';
-  const offId   = d.officer_id  || d.officerId   || '—';
-  const compId  = d._id || d.id || '—';
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function stars(r) {
+  const n = Math.round(r||0);
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+function rColor(r) {
+  return r >= 4 ? 'var(--green)' : r >= 2.5 ? 'var(--amber)' : 'var(--red)';
+}
+
+// ── Officer mini-card HTML ────────────────────────────────────────────────────
+function officerCard(o) {
+  if (!o) return `
+    <div class="off-card">
+      <div style="font-size:1.3rem">👮</div>
+      <div class="off-card-info">
+        <div class="off-card-name" style="color:var(--txt3)">Not Assigned</div>
+        <div class="off-card-dept">Koi officer assign nahi hai</div>
+      </div>
+    </div>`;
+  const rating = o.rating || 0;
   return `
-    <div class="dr"><span class="dk">Complaint ID</span><span class="dv" style="font-family:'JetBrains Mono',monospace">${compId}</span></div>
-    <div class="dr"><span class="dk">Submission Date</span><span class="dv" style="color:var(--blue)">📅 ${formattedDate}</span></div>
-    <div class="dr"><span class="dk">Citizen Naam</span><span class="dv">${d.Name || d.name || '—'}</span></div>
-    <div class="dr"><span class="dk">City / Ward</span><span class="dv">${d.city || '—'} / ${d.ward_number || '—'}</span></div>
-    <div class="dr"><span class="dk">Department</span><span class="dv">${d.departmentName || '—'}</span></div>
-    <div class="dr"><span class="dk">Urgency</span><span class="dv ${urgC}">${urg || '—'}</span></div>
-    <div class="dr"><span class="dk">Assigned Officer</span><span class="dv" style="color:var(--sl);font-weight:700">${offName}<br><small style="font-size:.65rem;color:var(--txt3)">ID: ${offId}</small></span></div>
-    <div class="dr"><span class="dk">Status</span><span class="bdg ${isSolved(d.status) ? 'bdg-r' : 'bdg-p'}">${st}</span></div>
-    ${d.complaint ? `<div class="ctxt">💬 <strong>Shikayat:</strong> ${d.complaint}</div>` : ''}
+    <div class="off-card">
+      <div style="font-size:1.3rem">👮</div>
+      <div class="off-card-info">
+        <div class="off-card-name">${o.name||o.Name||'—'}</div>
+        <div class="off-card-dept">🏢 ${o.department||'—'} &nbsp;·&nbsp; 📍 ${o.city||'—'}</div>
+        <div class="off-card-dept" style="margin-top:3px">✉️ ${o.email||'—'}</div>
+      </div>
+      <div class="off-card-rating">
+        <div class="off-stars" style="color:${rColor(rating)}">${stars(rating)}</div>
+        <div class="off-val" style="color:${rColor(rating)};font-weight:700">${rating.toFixed(1)} / 5.0</div>
+        <div class="off-val">✅${o.completedOnTime||0} &nbsp; ❌${o.missed||0}</div>
+      </div>
+    </div>`;
+}
+
+// ── Complaint detail HTML (static) ───────────────────────────────────────────
+function complaintHTML(d) {
+  if (!d) return '<p class="empty">Data nahi mila</p>';
+  const urg   = (d.urgency||'').toUpperCase();
+  const urgC  = urg==='CRITICAL'?'uc':urg==='HIGH'?'uh':'un';
+  const st    = (d.status||'PENDING').toUpperCase();
+  const dateObj = d.createdAt ? new Date(d.createdAt) : null;
+  const fmtDate = dateObj
+    ? dateObj.toLocaleDateString('hi-IN')+' | '+dateObj.toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'})
+    : '—';
+  const offId  = d.officer_id||d.officerId||'—';
+  const compId = d._id||d.id||'—';
+  const citizen = d.Name||d.name||'—';
+  return `
+    <div class="dr"><span class="dk">Complaint ID</span><span class="dv" style="font-family:'JetBrains Mono'">${compId}</span></div>
+    <div class="dr"><span class="dk">Submission Date</span><span class="dv" style="color:var(--blue)">📅 ${fmtDate}</span></div>
+    <div class="dr"><span class="dk">👤 Citizen Naam</span><span class="dv" style="color:var(--txt);font-weight:700">${citizen}</span></div>
+    <div class="dr"><span class="dk">City / Ward</span><span class="dv">${d.city||'—'} / ${d.ward_number||'—'}</span></div>
+    <div class="dr"><span class="dk">Department</span><span class="dv">${d.departmentName||'—'}</span></div>
+    <div class="dr"><span class="dk">Urgency</span><span class="dv ${urgC}">${urg||'—'}</span></div>
+    <div class="dr"><span class="dk">Status</span><span class="bdg ${isSolved(d.status)?'bdg-r':'bdg-p'}">${st}</span></div>
+    ${d.complaint?`<div class="ctxt">💬 <strong>Shikayat:</strong> ${d.complaint}</div>`:''}
+    <div style="margin-top:6px;font-size:.68rem;color:var(--txt3);font-family:'JetBrains Mono';margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">👮 Assigned Officer</div>
+    <div id="offblock-${compId}"><span class="spin"></span> Officer load ho raha hai...</div>
   `;
 }
 
-const deptIcons = {
-  'water':'💧','electricity':'⚡','road':'🛣️','sanitation':'🗑️','health':'🏥',
-  'police':'👮','education':'🎓','transport':'🚌','housing':'🏠','fire':'🔥',
-  'default':'🏢'
-};
+// ── Render complaint + async officer fetch ────────────────────────────────────
+async function renderWithOfficer(d, container) {
+  container.innerHTML = complaintHTML(d);
+  const offId  = d.officer_id||d.officerId||'—';
+  const compId = d._id||d.id||'—';
+  const block  = container.querySelector(`#offblock-${compId}`);
+  if (block) {
+    const o = await getOfficer(offId);
+    block.innerHTML = officerCard(o);
+  }
+}
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+function tab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.sb-nav a').forEach(a => a.classList.remove('on'));
+  const t = document.getElementById('tab-'+name);
+  if (t) t.classList.add('on');
+  if (el) el.classList.add('on');
+  if (role === 'ADMIN') {
+    const sid = localStorage.getItem('id');
+    if (sid) {
+      if (name==='reports')     document.getElementById('rAdId').value = sid;
+      if (name==='allofficers') document.getElementById('oAdId').value = sid;
+      if (name==='unsolved')    document.getElementById('uAdId').value = sid;
+    }
+  }
+  if (name==='mycomplaints') document.getElementById('myOfficerId').value = myId;
+}
+
+// ── Department icons ──────────────────────────────────────────────────────────
+const deptIcons = {'water':'💧','electricity':'⚡','road':'🛣️','sanitation':'🗑️','health':'🏥','police':'👮','education':'🎓','transport':'🚌','housing':'🏠','fire':'🔥','default':'🏢'};
 function getDeptIcon(name) {
-  const n = (name||'').toLowerCase();
+  const n=(name||'').toLowerCase();
   for(const [k,v] of Object.entries(deptIcons)) if(n.includes(k)) return v;
   return deptIcons.default;
 }
 
-function renderGrouped(data, showOfficer = false) {
-  const PRIO_ORDER = ['CRITICAL','HIGH','MEDIUM','LOW'];
-  const deptMap = {};
+// ── Grouped list render ───────────────────────────────────────────────────────
+function renderGrouped(data, showOfficer=false) {
+  const PRIO = ['CRITICAL','HIGH','MEDIUM','LOW'];
+  const dMap = {};
   for(const d of data){
-    const dept = d.departmentName || 'Unknown Department';
-    if(!deptMap[dept]) deptMap[dept] = [];
-    deptMap[dept].push(d);
+    const dept = d.departmentName||'Unknown Department';
+    if(!dMap[dept]) dMap[dept]=[];
+    dMap[dept].push(d);
   }
-  const deptPrioRank = dept => {
-    const items = deptMap[dept];
-    for(const p of PRIO_ORDER){
-      if(items.some(d => (d.urgency||'').toUpperCase() === p)) return PRIO_ORDER.indexOf(p);
-    }
+  const rank = dept => {
+    for(const p of PRIO) if(dMap[dept].some(d=>(d.urgency||'').toUpperCase()===p)) return PRIO.indexOf(p);
     return 99;
   };
-  const sortedDepts = Object.keys(deptMap).sort((a,b) => deptPrioRank(a)-deptPrioRank(b));
-  let html = '';
-  for(const dept of sortedDepts){
-    const items = deptMap[dept];
-    const icon  = getDeptIcon(dept);
-    const prioMap = {};
-    for(const p of PRIO_ORDER) prioMap[p] = [];
+  let html='';
+  for(const dept of Object.keys(dMap).sort((a,b)=>rank(a)-rank(b))){
+    const items = dMap[dept];
+    const pMap  = {};
+    for(const p of PRIO) pMap[p]=[];
     for(const d of items){
-      const p = (d.urgency||'').toUpperCase();
-      if(prioMap[p]) prioMap[p].push(d);
-      else prioMap['LOW'].push(d);
+      const p=(d.urgency||'').toUpperCase();
+      (pMap[p]||pMap['LOW']).push(d);
     }
-    const prioSections = PRIO_ORDER.filter(p => prioMap[p].length > 0).map(p => {
-      const list = prioMap[p];
-      const cards = list.map(d => {
-        const dateStr = d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB') : '—';
-        const st = (d.status||'PENDING').toUpperCase();
-        const offLine = showOfficer ? `<span class="ctag" style="color:var(--sl)">👤 ${d.OfficerName||'Not Assigned'}</span>` : '';
+    const sections = PRIO.filter(p=>pMap[p].length).map(p=>{
+      const cards = pMap[p].map(d=>{
+        const compId  = d._id||d.id||'—';
+        const citizen = d.Name||d.name||'—';
+        const offName = d.OfficerName||d.officerName||'Not Assigned';
+        const dateStr = d.createdAt?new Date(d.createdAt).toLocaleDateString('en-GB'):'—';
+        const st      = (d.status||'PENDING').toUpperCase();
+        // Encode data safely
+        const enc = encodeURIComponent(JSON.stringify(d));
         return `
-          <div class="citem" onclick="this.querySelector('.cdetail').style.display=this.querySelector('.cdetail').style.display==='none'?'block':'none'">
+          <div class="citem" onclick="toggleDetail(this,'${compId}','${enc}')">
             <div class="cih">
-              <span class="cid">${d._id||d.id||'—'}</span>
+              <span class="cid">${compId}</span>
               <span class="bdg ${isSolved(d.status)?'bdg-r':st==='IN_PROGRESS'?'bdg-i':'bdg-p'}">${st}</span>
             </div>
             <div class="ctx">${d.complaint||'—'}</div>
             <div class="cmeta">
-              ${offLine}
+              <span class="ctag" style="color:var(--txt)">🧑 ${citizen}</span>
+              ${showOfficer?`<span class="ctag" style="color:var(--sl)">👮 ${offName}</span>`:''}
               <span class="ctag">📅 ${dateStr}</span>
               <span class="ctag">📍 ${d.city||'—'}</span>
               <span class="ctag">🗂️ Ward: ${d.ward_number||'—'}</span>
             </div>
-            <div class="cdetail" style="display:none">${renderComplaint(d)}</div>
+            <div class="cdetail" id="detail-${compId}" style="display:none"></div>
           </div>`;
       }).join('');
       return `
         <div class="prio-block">
           <div class="prio-label prio-${p}">
-            <span>${p==='CRITICAL'?'🔴':p==='HIGH'?'🟠':p==='MEDIUM'?'🔵':'🟢'}</span>
-            ${p}
-            <span class="prio-count">${list.length} complaint${list.length>1?'s':''}</span>
+            <span>${p==='CRITICAL'?'🔴':p==='HIGH'?'🟠':p==='MEDIUM'?'🔵':'🟢'}</span>${p}
+            <span class="prio-count">${pMap[p].length} complaint${pMap[p].length>1?'s':''}</span>
           </div>
           <div class="clist">${cards}</div>
         </div>`;
     }).join('');
-    html += `
+    html+=`
       <div class="dept-block">
         <div class="dept-header" onclick="toggleDept(this)">
-          <div class="dept-title">
-            <span class="dept-icon">${icon}</span>
-            <span>${dept}</span>
-          </div>
+          <div class="dept-title"><span class="dept-icon">${getDeptIcon(dept)}</span><span>${dept}</span></div>
           <div style="display:flex;align-items:center;gap:8px">
             <span class="dept-count">${items.length} complaint${items.length>1?'s':''}</span>
             <span class="dept-chevron open">▼</span>
           </div>
         </div>
-        <div class="dept-body">${prioSections}</div>
+        <div class="dept-body">${sections}</div>
       </div>`;
   }
   return html;
 }
 
-function toggleDept(header) {
-  const body    = header.nextElementSibling;
-  const chevron = header.querySelector('.dept-chevron');
-  const isOpen  = body.style.display !== 'none';
-  body.style.display    = isOpen ? 'none' : '';
-  chevron.classList.toggle('open', !isOpen);
+// ── Toggle detail with lazy officer fetch ─────────────────────────────────────
+async function toggleDetail(itemEl, compId, enc) {
+  const detailEl = document.getElementById('detail-'+compId);
+  if (!detailEl) return;
+  const isOpen = detailEl.style.display !== 'none';
+  if (isOpen) { detailEl.style.display='none'; return; }
+  detailEl.style.display = 'block';
+  if (!detailEl.dataset.loaded) {
+    detailEl.dataset.loaded = '1';
+    try {
+      const d = JSON.parse(decodeURIComponent(enc));
+      await renderWithOfficer(d, detailEl);
+    } catch(e) {
+      detailEl.innerHTML = `<p style="color:var(--red)">❌ ${e.message}</p>`;
+    }
+  }
 }
 
-function summaryBanner(id, data) {
-  const total    = data.length;
-  const resolved = data.filter(d => isSolved(d.status)).length;
-  const pending  = data.filter(d => !isSolved(d.status)).length;
+function toggleDept(header) {
+  const body=header.nextElementSibling, chevron=header.querySelector('.dept-chevron');
+  const isOpen = body.style.display!=='none';
+  body.style.display = isOpen?'none':'';
+  chevron.classList.toggle('open',!isOpen);
+}
+
+function summaryBanner(id,data) {
+  const total=data.length, resolved=data.filter(d=>isSolved(d.status)).length, pending=total-resolved;
   return `
     <div style="margin-bottom:18px;">
-      <div style="padding:10px 14px;background:rgba(232,80,10,.06);border:1px solid var(--bdr);
-        border-radius:9px 9px 0 0;font-size:.8rem;color:var(--txt2);
-        display:flex;align-items:center;gap:8px;">
+      <div style="padding:10px 14px;background:rgba(232,80,10,.06);border:1px solid var(--bdr);border-radius:9px 9px 0 0;font-size:.8rem;color:var(--txt2);display:flex;align-items:center;gap:8px;">
         🪪 <span style="font-family:'JetBrains Mono';color:var(--sl)">${id}</span>
         <span style="margin-left:auto;color:var(--txt3)">Total: <strong style="color:var(--txt)">${total}</strong></span>
       </div>
@@ -472,104 +550,73 @@ function summaryBanner(id, data) {
     </div>`;
 }
 
-// ⭐ Rating stars helper
-function renderStars(rating) {
-  const r = Math.round(rating || 0);
-  return '★'.repeat(r) + '☆'.repeat(5 - r);
-}
-
-// ⭐ Rating color helper
-function ratingColor(rating) {
-  if (rating >= 4) return 'var(--green)';
-  if (rating >= 2.5) return 'var(--amber)';
-  return 'var(--red)';
-}
-
+// ── API Functions ─────────────────────────────────────────────────────────────
 async function fetchComplaint() {
-  const id = document.getElementById('fId').value.trim();
-  if (!id) { alert('ID darj karein.'); return; }
-  const el = document.getElementById('fRes');
-  el.classList.add('on'); el.innerHTML = '<span class="spin"></span>';
+  const id=document.getElementById('fId').value.trim();
+  if(!id){alert('ID darj karein.');return;}
+  const el=document.getElementById('fRes');
+  el.classList.add('on'); el.innerHTML='<span class="spin"></span> Fetch ho rahi hai...';
   try {
-    const r = await fetch(`${API}/department_officer/Analysis/fetch/complaint?Id=${encodeURIComponent(id)}`,
-      { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    el.innerHTML = renderComplaint(await r.json());
-  } catch(e) { el.innerHTML = `<p style="color:var(--red)">❌ ${e.message}</p>`; }
+    const r=await fetch(`${API}/department_officer/Analysis/fetch/complaint?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    await renderWithOfficer(await r.json(), el);
+  } catch(e){el.innerHTML=`<p style="color:var(--red)">❌ ${e.message}</p>`;}
 }
 
 async function loadAnalysis() {
-  const id = document.getElementById('aId').value.trim();
-  if (!id) return;
-  const el = document.getElementById('aPrev');
-  el.classList.add('on'); el.innerHTML = '<span class="spin"></span>';
+  const id=document.getElementById('aId').value.trim();
+  if(!id) return;
+  const el=document.getElementById('aPrev');
+  el.classList.add('on'); el.innerHTML='<span class="spin"></span>';
   try {
-    const r = await fetch(`${API}/department_officer/Analysis/fetch/complaint?Id=${encodeURIComponent(id)}`,
-      { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    el.innerHTML = renderComplaint(await r.json());
-  } catch(e) { el.innerHTML = `<p style="color:var(--red)">❌ ${e.message}</p>`; }
+    const r=await fetch(`${API}/department_officer/Analysis/fetch/complaint?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    await renderWithOfficer(await r.json(), el);
+  } catch(e){el.innerHTML=`<p style="color:var(--red)">❌ ${e.message}</p>`;}
 }
 
 async function submitAnalysis() {
-  const id  = document.getElementById('aId').value.trim();
-  const msg = document.getElementById('aMsg').value.trim();
-  const err = document.getElementById('aErr');
-  const ok  = document.getElementById('aOk');
+  const id=document.getElementById('aId').value.trim();
+  const msg=document.getElementById('aMsg').value.trim();
+  const err=document.getElementById('aErr'), ok=document.getElementById('aOk');
   err.classList.remove('on'); ok.classList.remove('on');
-  if (!id || !msg) { err.textContent = '❌ ID aur reply dono required hain.'; err.classList.add('on'); return; }
-  const btn = document.getElementById('aSubBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  if(!id||!msg){err.textContent='❌ ID aur reply dono required hain.';err.classList.add('on');return;}
+  const btn=document.getElementById('aSubBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   try {
-    const r = await fetch(
-      `${API}/department_officer/Analysis/analysis/complaint?Id=${encodeURIComponent(id)}&message=${encodeURIComponent(msg)}`,
-      { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    ok.textContent = '✅ Analysis aur reply successfully submit ho gayi!'; ok.classList.add('on');
-    document.getElementById('aMsg').value = '';
-  } catch(e) { err.textContent = '❌ ' + e.message; err.classList.add('on'); }
-  finally { btn.disabled = false; btn.textContent = '✅ Analysis Submit Karein'; }
+    const r=await fetch(`${API}/department_officer/Analysis/analysis/complaint?Id=${encodeURIComponent(id)}&message=${encodeURIComponent(msg)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    ok.textContent='✅ Analysis aur reply successfully submit ho gayi!'; ok.classList.add('on');
+    document.getElementById('aMsg').value='';
+  } catch(e){err.textContent='❌ '+e.message; err.classList.add('on');}
+  finally{btn.disabled=false; btn.textContent='✅ Analysis Submit Karein';}
 }
 
 async function fetchOfficerComplaints() {
-  const id = document.getElementById('myOfficerId').value.trim();
-  if (!id) { alert('Officer ID nahi mili. Pehle login karein.'); return; }
-  const el = document.getElementById('myCompRes');
-  el.innerHTML = '<span class="spin"></span> Complaints load ho rahi hain...';
+  const id=document.getElementById('myOfficerId').value.trim();
+  if(!id){alert('Officer ID nahi mili. Pehle login karein.');return;}
+  const el=document.getElementById('myCompRes');
+  el.innerHTML='<span class="spin"></span> Complaints load ho rahi hain...';
   try {
-    const r = await fetch(
-      `${API}/department_officer/Analysis/officer/complaint?Id=${encodeURIComponent(id)}`,
-      { method: 'POST', headers: H() }
-    );
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    const data = await r.json();
-    if (!Array.isArray(data) || !data.length) {
-      el.innerHTML = '<p class="empty">// Abhi koi complaint assigned nahi hai</p>';
-      return;
-    }
-    el.innerHTML = summaryBanner(id, data) + renderGrouped(data, false);
-  } catch(e) {
-    el.innerHTML = `<p style="color:var(--red);padding:10px">❌ ${e.message}</p>`;
-  }
+    const r=await fetch(`${API}/department_officer/Analysis/officer/complaint?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    const data=await r.json();
+    if(!Array.isArray(data)||!data.length){el.innerHTML='<p class="empty">// Abhi koi complaint assigned nahi hai</p>';return;}
+    el.innerHTML=summaryBanner(id,data)+renderGrouped(data,false);
+  } catch(e){el.innerHTML=`<p style="color:var(--red);padding:10px">❌ ${e.message}</p>`;}
 }
 
 async function findOfficer() {
-  const id = document.getElementById('oId').value.trim();
-  if (!id) { alert('Officer ID darj karein.'); return; }
-  const el = document.getElementById('oRes');
-  el.classList.add('on');
-  el.innerHTML = '<span class="spin"></span> Dhund rahe hain...';
+  const id=document.getElementById('oId').value.trim();
+  if(!id){alert('Officer ID darj karein.');return;}
+  const el=document.getElementById('oRes');
+  el.classList.add('on'); el.innerHTML='<span class="spin"></span> Dhund rahe hain...';
   try {
-    const r = await fetch(`${API}/department_officer/Analysis/find/Officer?Id=${encodeURIComponent(id)}`, {
-      method: 'POST', headers: H()
-    });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    const d = await r.json();
-    const rating      = d.rating      || 0;
-    const totalRating = d.totalRatings  || 0;
-    const onTime      = d.completedOnTime || 0;
-    const missed      = d.missed      || 0;
-    el.innerHTML = `
+    const r=await fetch(`${API}/department_officer/Analysis/find/Officer?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    const d=await r.json();
+    const rating=d.rating||0, totalRating=d.totalRatings||0, onTime=d.completedOnTime||0, missed=d.missed||0;
+    el.innerHTML=`
       <div style="border-bottom:1px solid var(--bdr2);padding-bottom:10px;margin-bottom:10px">
         <div class="dr"><span class="dk">Officer ID</span><span class="dv" style="font-family:'JetBrains Mono';color:var(--sl)">${d.id||d._id||'—'}</span></div>
       </div>
@@ -578,18 +625,16 @@ async function findOfficer() {
       <div class="dr"><span class="dk">Email</span><span class="dv" style="color:var(--blue)">${d.email||'—'}</span></div>
       <div class="dr"><span class="dk">Department</span><span class="dv">${d.department||'—'}</span></div>
       <div class="dr"><span class="dk">City</span><span class="dv">${d.city||'—'}</span></div>
-
       <div style="margin-top:12px;background:rgba(15,200,138,.08);border:1px solid rgba(15,200,138,.2);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:.75rem;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Reports Status</span>
         <span style="color:var(--green);font-weight:800;font-size:.9rem">📊 ${d.countReport||'0'} Assigned</span>
       </div>
-
       <div style="margin-top:10px;background:rgba(232,80,10,.06);border:1px solid var(--bdr);border-radius:8px;padding:14px;">
         <div style="font-size:.7rem;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-family:'JetBrains Mono'">⭐ Performance Rating</div>
         <div style="display:flex;align-items:center;gap:14px;">
-          <div style="font-size:2rem;font-weight:800;color:${ratingColor(rating)};font-family:'JetBrains Mono';line-height:1">${rating.toFixed(1)}</div>
+          <div style="font-size:2rem;font-weight:800;color:${rColor(rating)};font-family:'JetBrains Mono';line-height:1">${rating.toFixed(1)}</div>
           <div style="flex:1">
-            <div style="font-size:1.2rem;letter-spacing:3px;color:${ratingColor(rating)};margin-bottom:4px">${renderStars(rating)}</div>
+            <div style="font-size:1.2rem;letter-spacing:3px;color:${rColor(rating)};margin-bottom:4px">${stars(rating)}</div>
             <div style="font-size:.68rem;color:var(--txt3);font-family:'JetBrains Mono'">${totalRating} total ratings</div>
           </div>
         </div>
@@ -604,72 +649,73 @@ async function findOfficer() {
           </div>
         </div>
       </div>`;
-  } catch(e) {
-    el.innerHTML = `<p style="color:var(--red);padding:10px">❌ Error: ${e.message}</p>`;
-  }
+  } catch(e){el.innerHTML=`<p style="color:var(--red);padding:10px">❌ Error: ${e.message}</p>`;}
 }
 
 async function adminReports() {
-  const id = document.getElementById('rAdId').value.trim();
-  if (!id) { alert('Admin ID darj karein.'); return; }
-  const el = document.getElementById('rRes');
-  el.innerHTML = '<span class="spin"></span> Sorting Reports...';
+  const id=document.getElementById('rAdId').value.trim();
+  if(!id){alert('Admin ID darj karein.');return;}
+  const el=document.getElementById('rRes');
+  el.innerHTML='<span class="spin"></span> Sorting Reports...';
   try {
-    const r = await fetch(`${API}/admin/fetch/reports?Id=${encodeURIComponent(id)}`, { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    const data = await r.json();
-    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<p class="empty">// No reports found</p>'; return; }
-    el.innerHTML = summaryBanner(id, data) + renderGrouped(data, true);
-  } catch(e) { el.innerHTML = `<p style="color:var(--red)">❌ ${e.message}</p>`; }
+    const r=await fetch(`${API}/admin/fetch/reports?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    const data=await r.json();
+    if(!Array.isArray(data)||!data.length){el.innerHTML='<p class="empty">// No reports found</p>';return;}
+    el.innerHTML=summaryBanner(id,data)+renderGrouped(data,true);
+  } catch(e){el.innerHTML=`<p style="color:var(--red)">❌ ${e.message}</p>`;}
 }
 
 async function adminOfficers() {
-  const id = document.getElementById('oAdId').value.trim();
-  if (!id) { alert('Admin ID darj karein.'); return; }
-  const el = document.getElementById('oRes2');
-  el.innerHTML = '<span class="spin"></span> Fetching Officers...';
+  const id=document.getElementById('oAdId').value.trim();
+  if(!id){alert('Admin ID darj karein.');return;}
+  const el=document.getElementById('oRes2');
+  el.innerHTML='<span class="spin"></span> Fetching Officers...';
   try {
-    const r = await fetch(`${API}/admin/fetch/find/AllOfficer?Id=${encodeURIComponent(id)}`, { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    const data = await r.json();
-    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<p class="empty">// No officers found</p>'; return; }
-    el.innerHTML = data.map(o => `
+    const r=await fetch(`${API}/admin/fetch/find/AllOfficer?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    const data=await r.json();
+    if(!Array.isArray(data)||!data.length){el.innerHTML='<p class="empty">// No officers found</p>';return;}
+    el.innerHTML=data.map(o=>`
       <div class="ocard" style="border-left:3px solid var(--s);padding:18px;position:relative;">
-        <div style="position:absolute;top:12px;right:12px;font-size:0.65rem;color:var(--txt3);font-family:'JetBrains Mono';background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">
-          #${o.id || o._id || '—'}
+        <div style="position:absolute;top:12px;right:12px;font-size:.65rem;color:var(--txt3);font-family:'JetBrains Mono';background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;">#${o.id||o._id||'—'}</div>
+        <div class="ocn" style="font-size:1.1rem">${o.name||o.Name||'—'}</div>
+        <div class="ocd" style="margin-bottom:10px">🏢 ${o.department||'—'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;background:rgba(0,0,0,.2);padding:10px;border-radius:8px;">
+          <div style="font-size:.75rem"><span style="color:var(--txt3)">USERNAME:</span><br><span style="color:var(--sl)">@${o.username||'—'}</span></div>
+          <div style="font-size:.75rem"><span style="color:var(--txt3)">REPORTS:</span><br><span style="color:var(--green);font-weight:bold">${o.countReport||'0'} Assigned</span></div>
         </div>
-        <div class="ocn" style="font-size:1.1rem;color:var(--txt);">${o.name || o.Name || '—'}</div>
-        <div class="ocd" style="margin-bottom:10px;">🏢 ${o.department || '—'}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;">
-          <div style="font-size:0.75rem;"><span style="color:var(--txt3)">USERNAME:</span><br><span style="color:var(--sl)">@${o.username || '—'}</span></div>
-          <div style="font-size:0.75rem;"><span style="color:var(--txt3)">REPORTS:</span><br><span style="color:var(--green);font-weight:bold;">${o.countReport || '0'} Assigned</span></div>
+        <div style="background:rgba(232,80,10,.05);border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:.7rem;color:var(--txt3)">⭐ Rating</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:.9rem;letter-spacing:2px;color:${rColor(o.rating||0)}">${stars(o.rating||0)}</span>
+            <span style="font-family:'JetBrains Mono';font-size:.75rem;color:${rColor(o.rating||0)};font-weight:700">${(o.rating||0).toFixed(1)}</span>
+          </div>
         </div>
         <div class="oci" style="line-height:1.6">
-          <div style="display:flex;align-items:center;gap:6px;">📍 <span>${o.city || '—'}</span></div>
-          <div style="display:flex;align-items:center;gap:6px;">✉️ <span style="font-family:'JetBrains Mono';font-size:0.75rem;color:var(--blue)">${o.email || '—'}</span></div>
+          <div>📍 ${o.city||'—'}</div>
+          <div>✉️ <span style="font-family:'JetBrains Mono';font-size:.75rem;color:var(--blue)">${o.email||'—'}</span></div>
         </div>
-        <div style="margin-top:10px;font-size:0.6rem;letter-spacing:1px;color:var(--txt3)">
-          ROLES: ${(o.roles || []).join(', ') || 'OFFICER'}
-        </div>
+        <div style="margin-top:10px;font-size:.6rem;letter-spacing:1px;color:var(--txt3)">ROLES: ${(o.roles||[]).join(', ')||'OFFICER'}</div>
       </div>`).join('');
-  } catch(e) { el.innerHTML = `<p style="color:var(--red);grid-column:1/-1;">❌ ${e.message}</p>`; }
+  } catch(e){el.innerHTML=`<p style="color:var(--red);grid-column:1/-1">❌ ${e.message}</p>`;}
 }
 
 async function adminUnsolved() {
-  const id = document.getElementById('uAdId').value.trim();
-  if (!id) { alert('Admin ID darj karein.'); return; }
-  const el = document.getElementById('uRes');
-  el.innerHTML = '<span class="spin"></span>';
+  const id=document.getElementById('uAdId').value.trim();
+  if(!id){alert('Admin ID darj karein.');return;}
+  const el=document.getElementById('uRes');
+  el.innerHTML='<span class="spin"></span>';
   try {
-    const r = await fetch(`${API}/admin/fetch/unsolved/complaint?Id=${encodeURIComponent(id)}`, { method: 'POST', headers: H() });
-    if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
-    const data = await r.json();
-    if (!Array.isArray(data) || !data.length) { el.innerHTML = '<p class="empty" style="color:var(--green)">✅ Koi unsolved complaint nahi!</p>'; return; }
-    el.innerHTML = summaryBanner(id, data) + renderGrouped(data, true);
-  } catch(e) { el.innerHTML = `<p style="color:var(--red)">❌ ${e.message}</p>`; }
+    const r=await fetch(`${API}/admin/fetch/unsolved/complaint?Id=${encodeURIComponent(id)}`,{method:'POST',headers:H()});
+    if(!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
+    const data=await r.json();
+    if(!Array.isArray(data)||!data.length){el.innerHTML='<p class="empty" style="color:var(--green)">✅ Koi unsolved complaint nahi!</p>';return;}
+    el.innerHTML=summaryBanner(id,data)+renderGrouped(data,true);
+  } catch(e){el.innerHTML=`<p style="color:var(--red)">❌ ${e.message}</p>`;}
 }
 
-function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+function logout(){localStorage.clear();window.location.href='index.html';}
 </script>
 </body>
 </html>
