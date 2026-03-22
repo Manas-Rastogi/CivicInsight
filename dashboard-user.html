@@ -350,28 +350,30 @@ async function checkStatus() {
     const urgC = urg === 'CRITICAL' ? 'color:var(--red);font-weight:700' :
                  urg === 'HIGH'     ? 'color:var(--amber);font-weight:700' : '';
 
-    // Static info pehle dikhao
+    // Officer ID — complaint JSON mein officer_id field hai
+    const offId = d.officer_id || d.officerId || null;
+
+    // Static info + loading placeholder
     resEl.innerHTML = `
       <div style="font-size:.58rem;font-family:'JetBrains Mono';color:var(--s);letter-spacing:2px;margin-bottom:12px;text-transform:uppercase">
         ✅ Live Data — Connected
       </div>
-      <div class="str"><span class="sk">🆔 Complaint ID</span><span class="sv" style="font-family:'JetBrains Mono';font-size:.78rem">${d.id || id}</span></div>
+      <div class="str"><span class="sk">🆔 Complaint ID</span><span class="sv" style="font-family:'JetBrains Mono';font-size:.78rem">${d.id || d._id || id}</span></div>
       <div class="str"><span class="sk">👤 Naam</span><span class="sv">${d.name || d.Name || '—'}</span></div>
       <div class="str"><span class="sk">🏢 Dept</span><span class="sv">${d.departmentName || '—'}</span></div>
       <div class="str"><span class="sk">⚠️ Urgency</span><span class="sv" style="${urgC}">${urg}</span></div>
-      <div class="str"><span class="sk">👮 Officer</span><span class="sv">${d.OfficerName || d.officerName || 'Assigned Nahi Hua'}</span></div>
+      <div class="str"><span class="sk">👮 Officer</span><span class="sv">${d.officerName || d.OfficerName || 'Assigned Nahi Hua'}</span></div>
       <div class="str"><span class="sk">📌 Status</span>${badge}</div>
-      <div id="offRatingBlock" style="margin-top:4px"><span class="spin"></span> Officer rating load ho rahi hai...</div>
+      ${offId ? `<div id="offRatingBlock" style="margin-top:4px"><span class="spin"></span> Officer rating load ho rahi hai...</div>` : ''}
     `;
 
-    // Officer ID se rating fetch karo
-    const offId = d.officer_id || d.officerId || null;
-    const offBlock = resEl.querySelector('#offRatingBlock');
+    // Officer rating fetch karo agar ID mili
     if (offId) {
       const o = await fetchOfficerRating(offId);
-      offBlock.innerHTML = o ? officerRatingHTML(o) : '';
-    } else {
-      offBlock.innerHTML = '';
+      const block = document.getElementById('offRatingBlock');
+      if (block) {
+        block.innerHTML = o ? officerRatingHTML(o) : '';
+      }
     }
 
   } catch(e) {
