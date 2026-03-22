@@ -472,6 +472,19 @@ function summaryBanner(id, data) {
     </div>`;
 }
 
+// ⭐ Rating stars helper
+function renderStars(rating) {
+  const r = Math.round(rating || 0);
+  return '★'.repeat(r) + '☆'.repeat(5 - r);
+}
+
+// ⭐ Rating color helper
+function ratingColor(rating) {
+  if (rating >= 4) return 'var(--green)';
+  if (rating >= 2.5) return 'var(--amber)';
+  return 'var(--red)';
+}
+
 async function fetchComplaint() {
   const id = document.getElementById('fId').value.trim();
   if (!id) { alert('ID darj karein.'); return; }
@@ -552,6 +565,10 @@ async function findOfficer() {
     });
     if (!r.ok) throw new Error(`(${r.status}) ${await r.text()}`);
     const d = await r.json();
+    const rating      = d.rating      || 0;
+    const totalRating = d.totalRatings  || 0;
+    const onTime      = d.completedOnTime || 0;
+    const missed      = d.missed      || 0;
     el.innerHTML = `
       <div style="border-bottom:1px solid var(--bdr2);padding-bottom:10px;margin-bottom:10px">
         <div class="dr"><span class="dk">Officer ID</span><span class="dv" style="font-family:'JetBrains Mono';color:var(--sl)">${d.id||d._id||'—'}</span></div>
@@ -561,9 +578,31 @@ async function findOfficer() {
       <div class="dr"><span class="dk">Email</span><span class="dv" style="color:var(--blue)">${d.email||'—'}</span></div>
       <div class="dr"><span class="dk">Department</span><span class="dv">${d.department||'—'}</span></div>
       <div class="dr"><span class="dk">City</span><span class="dv">${d.city||'—'}</span></div>
+
       <div style="margin-top:12px;background:rgba(15,200,138,.08);border:1px solid rgba(15,200,138,.2);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:.75rem;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:1px">Reports Status</span>
         <span style="color:var(--green);font-weight:800;font-size:.9rem">📊 ${d.countReport||'0'} Assigned</span>
+      </div>
+
+      <div style="margin-top:10px;background:rgba(232,80,10,.06);border:1px solid var(--bdr);border-radius:8px;padding:14px;">
+        <div style="font-size:.7rem;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-family:'JetBrains Mono'">⭐ Performance Rating</div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="font-size:2rem;font-weight:800;color:${ratingColor(rating)};font-family:'JetBrains Mono';line-height:1">${rating.toFixed(1)}</div>
+          <div style="flex:1">
+            <div style="font-size:1.2rem;letter-spacing:3px;color:${ratingColor(rating)};margin-bottom:4px">${renderStars(rating)}</div>
+            <div style="font-size:.68rem;color:var(--txt3);font-family:'JetBrains Mono'">${totalRating} total ratings</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+          <div style="background:rgba(15,200,138,.06);border:1px solid rgba(15,200,138,.15);border-radius:7px;padding:10px;text-align:center;">
+            <div style="font-size:1.2rem;font-weight:800;color:var(--green);font-family:'JetBrains Mono'">${onTime}</div>
+            <div style="font-size:.62rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:3px">✅ On Time</div>
+          </div>
+          <div style="background:rgba(240,64,64,.06);border:1px solid rgba(240,64,64,.15);border-radius:7px;padding:10px;text-align:center;">
+            <div style="font-size:1.2rem;font-weight:800;color:var(--red);font-family:'JetBrains Mono'">${missed}</div>
+            <div style="font-size:.62rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-top:3px">❌ Missed</div>
+          </div>
+        </div>
       </div>`;
   } catch(e) {
     el.innerHTML = `<p style="color:var(--red);padding:10px">❌ Error: ${e.message}</p>`;
