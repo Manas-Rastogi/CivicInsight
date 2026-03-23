@@ -210,7 +210,7 @@ async function fetchOfficerRating(officerId) {
   if (!officerId) return null;
   try {
     const r = await fetch(
-      `${API}/open/officer/rating?Id=${encodeURIComponent(officerId)}`,
+      `${API}/api/officer/rating?Id=${encodeURIComponent(officerId)}`,
       { method: 'POST', headers: H() }
     );
     if (!r.ok) {
