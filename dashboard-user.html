@@ -85,7 +85,6 @@ input::placeholder,textarea::placeholder{color:var(--txt3);font-style:italic;fon
 .err.on{display:block}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(232,80,10,.2);border-top-color:var(--s);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* Officer rating card */
 .off-rating-card{margin-top:12px;background:rgba(232,80,10,.04);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;}
 .off-rating-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .off-rating-name{font-size:.88rem;font-weight:700;color:var(--sl)}
@@ -196,7 +195,6 @@ function logout() {
   window.location.href = 'login.html';
 }
 
-// ── Stars & color helpers ─────────────────────────────────────────────────────
 function stars(r) {
   const n = Math.round(r || 0);
   return '★'.repeat(n) + '☆'.repeat(5 - n);
@@ -205,13 +203,13 @@ function rColor(r) {
   return r >= 4 ? 'var(--green)' : r >= 2.5 ? 'var(--amber)' : 'var(--red)';
 }
 
-// ── Fetch officer details ─────────────────────────────────────────────────────
+// ✅ FIX: POST → GET
 async function fetchOfficerRating(officerId) {
   if (!officerId) return null;
   try {
     const r = await fetch(
       `${API}/open/officer/rating?Id=${encodeURIComponent(officerId)}`,
-      { method: 'POST', headers: H() }
+      { method: 'GET', headers: H() }   // ✅ GET hai ab
     );
     if (!r.ok) {
       const errText = await r.text();
@@ -227,7 +225,6 @@ async function fetchOfficerRating(officerId) {
   }
 }
 
-// ── Officer rating card HTML ──────────────────────────────────────────────────
 function officerRatingHTML(o) {
   if (!o) return '';
   const rating  = o.rating || 0;
@@ -268,7 +265,6 @@ function officerRatingHTML(o) {
     </div>`;
 }
 
-// ── Submit Complaint ──────────────────────────────────────────────────────────
 async function submitComplaint() {
   const name  = document.getElementById('cName').value.trim();
   const city  = document.getElementById('cCity').value.trim();
@@ -321,7 +317,6 @@ async function submitComplaint() {
   }
 }
 
-// ── Check Status ──────────────────────────────────────────────────────────────
 async function checkStatus() {
   const idInput = document.getElementById('stId');
   const resEl   = document.getElementById('stRes');
@@ -361,7 +356,6 @@ async function checkStatus() {
 
     const offId = d.officer_id || d.officerId || null;
 
-    // Step 1: Static info render karo
     resEl.innerHTML =
       '<div style="font-size:.58rem;font-family:JetBrains Mono;color:var(--s);letter-spacing:2px;margin-bottom:12px;text-transform:uppercase">✅ Live Data — Connected</div>' +
       '<div class="str"><span class="sk">🆔 Complaint ID</span><span class="sv" style="font-family:JetBrains Mono;font-size:.78rem">' + (d.id || d._id || id) + '</span></div>' +
@@ -372,7 +366,6 @@ async function checkStatus() {
       '<div class="str"><span class="sk">📌 Status</span>' + badge + '</div>' +
       (offId ? '<div id="offRatingBlock" style="margin-top:8px"><span class="spin"></span> Officer rating load ho rahi hai...</div>' : '');
 
-    // Step 2: Officer rating fetch karo aur inject karo
     if (offId) {
       const o = await fetchOfficerRating(offId);
       const block = document.getElementById('offRatingBlock');
@@ -389,7 +382,6 @@ async function checkStatus() {
     btn.disabled = false;
   }
 }
-
 </script>
 </body>
 </html>
