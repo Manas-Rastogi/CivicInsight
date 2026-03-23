@@ -210,7 +210,7 @@ async function fetchOfficerRating(officerId) {
   if (!officerId) return null;
   try {
     const r = await fetch(
-      `${API}/department_officer/Analysis/find/Officer?Id=${encodeURIComponent(officerId)}`,
+      `${API}/public/officer/rating?Id=${encodeURIComponent(officerId)}`,
       { method: 'POST', headers: H() }
     );
     if (!r.ok) return null;
@@ -341,47 +341,46 @@ async function checkStatus() {
     const d  = await r.json();
     const st = (d.status || 'PENDING').toUpperCase();
     const badge =
-      st === 'RESOLVED'    ? `<span class="bdg bdg-r">RESOLVED ✅</span>` :
-      st === 'ANALYZED'    ? `<span class="bdg bdg-r">ANALYZED 🔍</span>` :
-      st === 'IN_PROGRESS' ? `<span class="bdg bdg-i">IN_PROGRESS 🔄</span>` :
-                             `<span class="bdg bdg-p">PENDING ⏳</span>`;
+      st === 'RESOLVED'    ? '<span class="bdg bdg-r">RESOLVED ✅</span>' :
+      st === 'ANALYZED'    ? '<span class="bdg bdg-r">ANALYZED 🔍</span>' :
+      st === 'IN_PROGRESS' ? '<span class="bdg bdg-i">IN_PROGRESS 🔄</span>' :
+                             '<span class="bdg bdg-p">PENDING ⏳</span>';
 
     const urg  = (d.urgency || 'NORMAL').toUpperCase();
     const urgC = urg === 'CRITICAL' ? 'color:var(--red);font-weight:700' :
                  urg === 'HIGH'     ? 'color:var(--amber);font-weight:700' : '';
 
-    // Officer ID — complaint JSON mein officer_id field hai
     const offId = d.officer_id || d.officerId || null;
 
-    // Static info + loading placeholder
-    resEl.innerHTML = `
-      <div style="font-size:.58rem;font-family:'JetBrains Mono';color:var(--s);letter-spacing:2px;margin-bottom:12px;text-transform:uppercase">
-        ✅ Live Data — Connected
-      </div>
-      <div class="str"><span class="sk">🆔 Complaint ID</span><span class="sv" style="font-family:'JetBrains Mono';font-size:.78rem">${d.id || d._id || id}</span></div>
-      <div class="str"><span class="sk">👤 Naam</span><span class="sv">${d.name || d.Name || '—'}</span></div>
-      <div class="str"><span class="sk">🏢 Dept</span><span class="sv">${d.departmentName || '—'}</span></div>
-      <div class="str"><span class="sk">⚠️ Urgency</span><span class="sv" style="${urgC}">${urg}</span></div>
-      <div class="str"><span class="sk">👮 Officer</span><span class="sv">${d.officerName || d.OfficerName || 'Assigned Nahi Hua'}</span></div>
-      <div class="str"><span class="sk">📌 Status</span>${badge}</div>
-      ${offId ? `<div id="offRatingBlock" style="margin-top:4px"><span class="spin"></span> Officer rating load ho rahi hai...</div>` : ''}
-    `;
+    // Step 1: Static info render karo
+    resEl.innerHTML =
+      '<div style="font-size:.58rem;font-family:JetBrains Mono;color:var(--s);letter-spacing:2px;margin-bottom:12px;text-transform:uppercase">✅ Live Data — Connected</div>' +
+      '<div class="str"><span class="sk">🆔 Complaint ID</span><span class="sv" style="font-family:JetBrains Mono;font-size:.78rem">' + (d.id || d._id || id) + '</span></div>' +
+      '<div class="str"><span class="sk">👤 Naam</span><span class="sv">' + (d.name || d.Name || '—') + '</span></div>' +
+      '<div class="str"><span class="sk">🏢 Dept</span><span class="sv">' + (d.departmentName || '—') + '</span></div>' +
+      '<div class="str"><span class="sk">⚠️ Urgency</span><span class="sv" style="' + urgC + '">' + urg + '</span></div>' +
+      '<div class="str"><span class="sk">👮 Officer</span><span class="sv">' + (d.officerName || d.OfficerName || 'Assigned Nahi Hua') + '</span></div>' +
+      '<div class="str"><span class="sk">📌 Status</span>' + badge + '</div>' +
+      (offId ? '<div id="offRatingBlock" style="margin-top:8px"><span class="spin"></span> Officer rating load ho rahi hai...</div>' : '');
 
-    // Officer rating fetch karo agar ID mili
+    // Step 2: Officer rating fetch karo aur inject karo
     if (offId) {
       const o = await fetchOfficerRating(offId);
       const block = document.getElementById('offRatingBlock');
-      if (block) {
-        block.innerHTML = o ? officerRatingHTML(o) : '';
+      if (block && o) {
+        block.innerHTML = officerRatingHTML(o);
+      } else if (block) {
+        block.innerHTML = '';
       }
     }
 
   } catch(e) {
-    resEl.innerHTML = `<div style="color:var(--red);font-size:.84rem"><b>❌ Error: ${e.message}</b></div>`;
+    resEl.innerHTML = '<div style="color:var(--red);font-size:.84rem"><b>❌ Error: ' + e.message + '</b></div>';
   } finally {
     btn.disabled = false;
   }
 }
+
 </script>
 </body>
 </html>
