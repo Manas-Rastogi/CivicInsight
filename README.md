@@ -7,7 +7,7 @@
   the need to navigate bureaucratic loops.
 
   Live Demo   →  https://civic-insight.vercel.app
-  Stack       →  Spring Boot  ·  MongoDB  ·  Llama 3.2 (Live AI)  ·  JWT
+  Stack       →  Spring Boot  ·  MongoDB  ·  Llama 3 (Live AI)  ·  JWT
   Frontend    →  Vanilla HTML / CSS / JS  ·  No build step required
 
 
