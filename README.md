@@ -172,7 +172,7 @@
   POST  /admin/signup/login/admin
         Body: { username, password }  →  JWT
 
-  ── Complaints  [Auth Required] ───────────────────────────────────────────
+  ── Complaints  [Auth Required] ──────────────────────────────────────────
 
   POST  /user/complaint/submit
         Body: { Name, city, ward_number, complaint }
@@ -181,7 +181,7 @@
   POST  /user/complaint/check/status?Id=
         Query param: Id
 
-  ── Officer Analysis  [Auth Required] ─────────────────────────────────────
+  ── Officer Analysis  [Auth Required] ────────────────────────────────────
 
   POST  /department_officer/Analysis/fetch/complaint?Id=
         Query param: Id — returns full complaint details
