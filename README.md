@@ -246,7 +246,7 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   [✓]  Citizen, Officer, Admin registration and login (JWT)
-  [✓]  Llama 3.2 powered complaint routing and urgency detection
+  [✓]  Llama 3 powered complaint routing and urgency detection
   [✓]  Real-time complaint status tracking
   [✓]  Officer dashboard — fetch, analyze, reply
   [✓]  Constituency Health and Sentiment Monitor for politicians
