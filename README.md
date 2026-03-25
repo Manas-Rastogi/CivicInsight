@@ -232,7 +232,7 @@
   keyword-based engine:
 
   Keywords                          Department               Urgency
-  ────────────────────────────────  ───────────────────────  ──────────
+  ───────────────────────────────  ──────────────────────  ──────────
   bijli, wire, electricity          Electricity / DISCOM     HIGH
   paani, water, jal, nalka          Jal Board                HIGH
   police, crime, theft              Local Police Station     HIGH
