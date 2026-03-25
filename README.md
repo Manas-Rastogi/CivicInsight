@@ -134,7 +134,7 @@
   ──────────────
   cd frontend/
   open index.html
-  # Or use VS Code Live Server — no build step needed.
+   Or use VS Code Live Server — no build step needed.
 
   NOTE: All frontend files contain  const BASE = 'http://localhost:8080'
         Update this to your production server URL before deploying.
@@ -278,5 +278,5 @@
 
   MIT License — see the LICENSE file for details.
 
-  Made with ❤️  for Bharat 🇮🇳
+  Made with ❤️  for Bharat IN
   Every complaint deserves to be heard. That is the purpose of CivicInsight.
