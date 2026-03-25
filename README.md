@@ -29,7 +29,7 @@
 
   The Solution
   ────────────
-  A unified portal powered by Llama 3.2 that handles routing, prioritization,
+  A unified portal powered by Llama 3 that handles routing, prioritization,
   and assignment — giving citizens transparency and giving officials clarity.
 
 
