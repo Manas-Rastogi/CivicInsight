@@ -372,13 +372,13 @@ function getRating(o) {
             : (o.score !== undefined) ? o.score : 0;
   const n = parseFloat(raw);
   if (!n || isNaN(n)) return 0;
-  // Agar 0-100 scale mein aaya toh 0-5 mein convert
-  const val = n > 5 ? n / 20 : n;
-  return Math.min(5, Math.max(0, parseFloat(val.toFixed(1))));
+  // API 0-1 scale mein deta hai — 0-5 mein convert karo
+  const val = n <= 1 ? n * 5 : n > 5 ? n / 20 : n;
+  return Math.min(5, Math.max(0, parseFloat(val.toFixed(2))));
 }
 function stars(r) {
   const val = Math.min(5, Math.max(0, parseFloat(r) || 0));
-  const full = Math.floor(val);
+  const full = Math.round(val);
   return '★'.repeat(full) + '☆'.repeat(5 - full);
 }
 function rColor(r) {
