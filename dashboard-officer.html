@@ -420,6 +420,15 @@ function complaintHTML(d) {
     ${d.complaint?`<div class="ctxt">💬 <strong>Shikayat:</strong> ${d.complaint}</div>`:''}
     <div style="margin-top:6px;font-size:.68rem;color:var(--txt3);font-family:'JetBrains Mono';margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">👮 Assigned Officer</div>
     <div id="offblock-${compId}"><span class="spin"></span> Officer load ho raha hai...</div>
+    ${!isSolved(d.status) ? `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr2);">
+      <button class="btn-analyze" style="width:100%;justify-content:center;padding:10px 18px;font-size:.82rem;" onclick="openAnalysis('${compId}')">
+        🔍 Is Complaint ko Analyze Karein
+      </button>
+    </div>` : `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr2);font-size:.75rem;color:var(--green);font-family:'JetBrains Mono';text-align:center;opacity:.8;">
+      ✅ Yeh complaint already ${(d.status||'').toUpperCase()} hai
+    </div>`}
   `;
 }
 
