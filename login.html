@@ -145,11 +145,10 @@ const REDIRECT = {
   ADMIN:   'dashboard-officer.html'
 };
 
-// Google OAuth URL
-const GOOGLE_CLIENT_ID = '1060034297672-4vgv5ihd1qca2p39can0pvhod5hsb29o.apps.googleusercontent.com';
-const GOOGLE_REDIRECT  = 'https://developers.google.com/oauthplayground';
-const GOOGLE_AUTH_URL  = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent`;
 
+const GOOGLE_CLIENT_ID = '1060034297672-4vgv5ihd1qca2p39can0pvhod5hsb29o.apps.googleusercontent.com';
+const GOOGLE_REDIRECT  = 'https://civic-insight.vercel.app/login.html';  
+const GOOGLE_AUTH_URL  = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent`;
 /* pre-select role from URL */
 const urlRole = new URLSearchParams(location.search).get('role');
 if (urlRole && EP[urlRole.toUpperCase()]) {
