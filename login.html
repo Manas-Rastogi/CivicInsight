@@ -1,18 +1,49 @@
-m
-
-/* role tabs */
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CivicInsight — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --s:#E8500A;--sl:#FF7A35;
+  --deep:#070709;--ink:#0E0E14;--lift:#181820;
+  --bdr:rgba(232,80,10,.15);--bdr2:rgba(255,255,255,.07);
+  --txt:#EDEAE5;--txt2:#B0ACBA;--txt3:#6E6A7A;
+  --green:#0FC88A;--red:#F04040;
+}
+body{background:var(--deep);color:var(--txt);font-family:'Outfit',sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;position:relative;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(232,80,10,.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(232,80,10,.03) 1px,transparent 1px);background-size:50px 50px}
+.glow{position:fixed;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(232,80,10,.08) 0%,transparent 65%);
+  top:50%;left:50%;transform:translate(-50%,-50%)}
+.back{position:fixed;top:22px;left:24px;z-index:10;color:var(--txt3);text-decoration:none;
+  font-size:.85rem;transition:color .2s}
+.back:hover{color:var(--txt)}
+.card{position:relative;z-index:1;width:100%;max-width:420px;background:var(--ink);
+  border:1px solid var(--bdr);border-radius:20px;padding:42px 38px;
+  animation:up .4s ease}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.clogo{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:28px}
+.clogo span{color:var(--sl)}
+.ctitle{font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-.5px}
+.csub{color:var(--txt3);font-size:.875rem;margin-bottom:24px}
 .rtabs{display:flex;gap:5px;background:rgba(0,0,0,.4);border-radius:10px;
   padding:4px;margin-bottom:22px}
 .rtab{flex:1;padding:9px 4px;border:none;border-radius:7px;background:transparent;
   color:var(--txt3);font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:500;
   cursor:pointer;transition:all .2s;text-align:center}
 .rtab.on{background:var(--s);color:#fff;font-weight:700}
-
 .rinfo{background:rgba(232,80,10,.06);border:1px solid var(--bdr);border-radius:8px;
   padding:9px 13px;font-size:.78rem;color:var(--txt3);margin-bottom:16px;
   font-family:'JetBrains Mono',monospace}
 .rinfo span{color:var(--sl)}
-
 .field{margin-bottom:15px}
 label{display:block;font-size:.72rem;color:var(--txt3);margin-bottom:5px;
   font-weight:500;text-transform:uppercase;letter-spacing:.5px}
@@ -21,17 +52,14 @@ input{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--bdr2);border-r
   outline:none;transition:border-color .2s,box-shadow .2s}
 input:focus{border-color:rgba(232,80,10,.5);box-shadow:0 0 0 3px rgba(232,80,10,.08)}
 input::placeholder{color:var(--txt3)}
-
 .sbtn{width:100%;padding:13px;background:var(--s);border:none;border-radius:10px;
   color:#fff;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;
   cursor:pointer;transition:all .2s;box-shadow:0 4px 18px rgba(232,80,10,.25);margin-top:4px}
 .sbtn:hover{background:var(--sl);transform:translateY(-1px)}
 .sbtn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-
 .alt{text-align:center;margin-top:18px;color:var(--txt3);font-size:.875rem}
 .alt a{color:var(--s);text-decoration:none;font-weight:600}
 .alt a:hover{color:var(--sl)}
-
 .msg{border-radius:8px;padding:10px 14px;font-size:.84rem;margin-bottom:13px;display:none}
 .msg.on{display:block}
 .msg.err{background:rgba(240,64,64,.08);border:1px solid rgba(240,64,64,.22);color:var(--red)}
@@ -39,6 +67,21 @@ input::placeholder{color:var(--txt3)}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);
   border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Google Button */
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bdr2)}
+.divider span{font-size:.72rem;color:var(--txt3);white-space:nowrap}
+.gbtn{width:100%;padding:12px;background:transparent;border:1px solid var(--bdr2);
+  border-radius:10px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:.9rem;
+  font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;
+  justify-content:center;gap:10px}
+.gbtn:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.15);
+  transform:translateY(-1px)}
+.gicon{width:18px;height:18px;flex-shrink:0}
+
+/* Google section — sirf USER ke liye */
+#googleSection{display:block}
 </style>
 </head>
 <body>
@@ -64,6 +107,21 @@ input::placeholder{color:var(--txt3)}
   <div class="field"><label>Password</label><input type="password" id="pass" placeholder="••••••••"/></div>
 
   <button class="sbtn" id="loginBtn" onclick="doLogin()">Login Karein</button>
+
+  <!-- Google Auth — sirf USER tab mein dikhega -->
+  <div id="googleSection">
+    <div class="divider"><span>ya Google se login karein</span></div>
+    <button class="gbtn" onclick="googleLogin()">
+      <svg class="gicon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Google se Login Karein
+    </button>
+  </div>
+
   <p class="alt">Account nahi hai? <a href="signup.html">Register karein</a></p>
 </div>
 
@@ -87,6 +145,11 @@ const REDIRECT = {
   ADMIN:   'dashboard-officer.html'
 };
 
+// Google OAuth URL
+const GOOGLE_CLIENT_ID = '1060034297672-4vgv5ihd1qca2p39can0pvhod5hsb29o.apps.googleusercontent.com';
+const GOOGLE_REDIRECT  = 'https://developers.google.com/oauthplayground';
+const GOOGLE_AUTH_URL  = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent`;
+
 /* pre-select role from URL */
 const urlRole = new URLSearchParams(location.search).get('role');
 if (urlRole && EP[urlRole.toUpperCase()]) {
@@ -98,19 +161,64 @@ if (urlRole && EP[urlRole.toUpperCase()]) {
   document.getElementById('epTxt').textContent = EP_LABEL[role];
 }
 
+// Google callback handle karo agar URL mein code hai
+const urlParams = new URLSearchParams(location.search);
+const googleCode = urlParams.get('code');
+if (googleCode) {
+  handleGoogleCallback(googleCode);
+}
+
 function setRole(r, el) {
   role = r;
   document.querySelectorAll('.rtab').forEach(t => t.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('epTxt').textContent = EP_LABEL[r];
+  // Google section sirf USER ke liye dikhao
+  document.getElementById('googleSection').style.display = r === 'USER' ? 'block' : 'none';
   clearMsg();
 }
+
 function clearMsg() {
   document.getElementById('errMsg').classList.remove('on');
   document.getElementById('okMsg').classList.remove('on');
 }
 function showErr(m) { const e=document.getElementById('errMsg'); e.textContent='❌ '+m; e.classList.add('on'); }
 function showOk(m)  { const e=document.getElementById('okMsg');  e.textContent='✅ '+m; e.classList.add('on'); }
+
+// Google Login — Google OAuth page pe redirect karo
+function googleLogin() {
+  // check=user store karo taaki callback mein pata chale
+  localStorage.setItem('googleCheck', 'user');
+  window.location.href = GOOGLE_AUTH_URL;
+}
+
+// Google callback — backend ko code bhejo
+async function handleGoogleCallback(code) {
+  const check = localStorage.getItem('googleCheck') || 'user';
+  const btn   = document.getElementById('loginBtn');
+  showOk('Google se login ho raha hai...');
+
+  try {
+    const res = await fetch(
+      `${API}/auth/google/callback?code=${encodeURIComponent(code)}&check=${check}`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const text = await res.text();
+    if (!res.ok) { showErr(text || 'Google login failed'); return; }
+
+    const token = text.replace(/^"|"$/g, '');
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', 'USER');
+    localStorage.removeItem('googleCheck');
+
+    showOk('Google login successful! Redirect ho raha hai...');
+    setTimeout(() => window.location.href = 'dashboard-user.html', 800);
+
+  } catch(e) {
+    showErr('Google login error: ' + e.message);
+  }
+}
 
 async function doLogin() {
   const username = document.getElementById('uname').value.trim();
@@ -129,22 +237,18 @@ async function doLogin() {
       body: JSON.stringify({ username, password })
     });
 
-    const text = await res.text(); // Pehle text mein lein
-
+    const text = await res.text();
     if (!res.ok) { showErr(text || `Error: ${res.status}`); return; }
 
     try {
-      // Koshish karein ki agar ye JSON hai (Jo humne backend change kiya tha)
       const data = JSON.parse(text);
       localStorage.setItem('token', data.token);
-      localStorage.setItem('id', data.id); // <--- Yeh rahi aapki hex ID (69a263...)
+      localStorage.setItem('id', data.id);
       localStorage.setItem('username', data.username || username);
     } catch (e) {
-      // Agar backend sirf plain String bhej raha hai (Sirf Token)
       const token = text.replace(/^"|"$/g, '');
       localStorage.setItem('token', token);
-      // Agar ID nahi aayi toh username ko hi backup ID maan lein
-      localStorage.setItem('id', username); 
+      localStorage.setItem('id', username);
     }
 
     localStorage.setItem('role', role);
@@ -152,7 +256,6 @@ async function doLogin() {
     setTimeout(() => window.location.href = REDIRECT[role], 700);
 
   } catch(e) {
-    console.error("Login Error:", e);
     showErr('Backend connect nahi ho raha. Check karein Spring Boot chal raha hai ya nahi.');
   } finally {
     btn.disabled = false;
